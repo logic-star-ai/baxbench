@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: ["--target-version=py312"]
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: "./scripts/run_mypy.sh"
+        language: system
+        verbose: true
+        types: [python]
+        require_serial: true
+
+

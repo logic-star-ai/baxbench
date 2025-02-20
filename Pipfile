@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+openai = "*"
+docker = "*"
+tabulate = "*"
+simple-parsing = "*"
+tqdm = "*"
+termcolor = "*"
+pre-commit = "*"
+ipython = "*"
+mypy = "1.14.1"
+types-requests = "*"
+types-tqdm = "*"
+types-tabulate = "*"
+docker-stubs = "*"
+anthropic = "*"
+pdfplumber = "*"
+imageio = "*"
+types-pyyaml = "*"
+matplotlib = "*"
+
+[requires]
+python_version = "3.12"
+
+[dev-packages]
