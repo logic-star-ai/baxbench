@@ -100,6 +100,8 @@ class Env:
                 add_file(manifest_path, content)
         tar_stream.seek(0)
 
+        logger.info("Files copied. Building the docker image.")
+        logger.info("-" * 100)
         # Build the Docker image using the tar file.
         lang, frw = self.language.replace("-", "_"), self.framework.replace("-", "_")
         tag = f"bax_bench_{lang}_{frw}".lower()
@@ -109,6 +111,7 @@ class Env:
             custom_context=True,
             tag=tag,
             rm=True,
+            timeout=600,
             forcerm=True,
             labels={"language": self.language, "framework": self.framework},
         )
