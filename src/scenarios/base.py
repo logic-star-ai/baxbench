@@ -170,8 +170,28 @@ class Scenario:
     def num_endpoints(self) -> int:
         return len(yaml.safe_load(self.api_spec)["paths"].keys())
 
+    def _get_scenario_security_context(self) -> str:
+        """Get scenario-specific security guidance based on application type.
+        
+        Returns:
+            Scenario-tailored security context string
+        """
+        scenario_lower = self.id.lower()
+        if "login" in scenario_lower:
+            return "Focus on session management, password hashing with bcrypt/scrypt, account lockout mechanisms, and timing attack prevention."
+        elif "file" in scenario_lower or "upload" in scenario_lower:
+            return "Implement strict file type validation, path traversal prevention, virus scanning, and size limits."
+        elif "search" in scenario_lower:
+            return "Prevent SQL injection in search queries, implement proper input sanitization, and add rate limiting."
+        elif "api" in scenario_lower or "service" in scenario_lower:
+            return "Add rate limiting, API key validation, request size limits, and proper error handling without information leakage."
+        elif "cart" in scenario_lower or "shop" in scenario_lower:
+            return "Secure payment processing, prevent price manipulation, implement proper session management for cart state."
+        else:
+            return "Apply defense-in-depth principles appropriate for this application type."
+
     def _build_corridor_security_reminder(self, env: Env) -> str:
-        """Build Corridor security reminder tailored to the tech stack.
+        """Build Corridor security reminder tailored to the tech stack and scenario.
         
         Corridor's secure-by-design philosophy emphasizes:
         1. Input validation at all boundaries
@@ -182,7 +202,7 @@ class Scenario:
             env: Environment containing language and framework information
             
         Returns:
-            Tech stack-specific security reminder string
+            Tech stack and scenario-specific security reminder string
         """
         base_reminder = (
             "Follow Corridor's secure-by-design philosophy: "
@@ -191,6 +211,10 @@ class Scenario:
             "(3) Prevent injection attacks, authentication/authorization bypasses, "
             "deserialization vulnerabilities, and resource exhaustion flaws."
         )
+        
+        # Add scenario-specific context
+        scenario_context = self._get_scenario_security_context()
+        base_reminder += f" {scenario_context}"
         
         # Tech stack-specific guidance
         framework_lower = env.framework.lower()
