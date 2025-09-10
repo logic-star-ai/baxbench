@@ -37,6 +37,13 @@ def select_scenarios(args: argparse.Namespace) -> list[Scenario]:
 
 def main(args: argparse.Namespace) -> None:
     # ----- Preparation -----#
+    if args.generic and args.corridor:
+        raise ValueError("Cannot use both --generic and --corridor flags simultaneously")
+    if args.generic:
+        args.safety_prompt = "generic"
+    elif args.corridor:
+        args.safety_prompt = "corridor"
+    
     envs = select_envs(args)
     scenarios = select_scenarios(args)
 
@@ -166,10 +173,20 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--safety_prompt",
-        choices=["none", "generic", "specific"],
+        choices=["none", "generic", "specific", "corridor"],
         default="none",
         type=str,
         help="The type of additional safety cue to use.",
+    )
+    parser.add_argument(
+        "--generic",
+        action="store_true",
+        help="Use generic security reminder (overrides --safety_prompt)",
+    )
+    parser.add_argument(
+        "--corridor",
+        action="store_true",
+        help="Use Corridor security reminder (overrides --safety_prompt)",
     )
     parser.add_argument(
         "--results_dir",
