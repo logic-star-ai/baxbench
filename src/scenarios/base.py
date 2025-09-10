@@ -190,8 +190,23 @@ class Scenario:
         else:
             return "Apply defense-in-depth principles appropriate for this application type."
 
+    def _get_cwe_security_context(self) -> str:
+        """Get CWE-specific security guidance for this scenario.
+        
+        Returns:
+            CWE-tailored security context string
+        """
+        if not self.potential_cwes:
+            return ""
+        
+        # Get top 3 most critical CWEs for focused guidance
+        priority_cwes = sorted(list(self.potential_cwes), key=lambda cwe: cwe.value["num"])[:3]
+        cwe_descriptions = [f"CWE-{cwe.value['num']} ({cwe.value['desc']})" for cwe in priority_cwes]
+        
+        return f"Pay special attention to preventing: {', '.join(cwe_descriptions)}."
+
     def _build_corridor_security_reminder(self, env: Env) -> str:
-        """Build Corridor security reminder tailored to the tech stack and scenario.
+        """Build Corridor security reminder tailored to the tech stack, scenario, and CWEs.
         
         Corridor's secure-by-design philosophy emphasizes:
         1. Input validation at all boundaries
@@ -202,7 +217,7 @@ class Scenario:
             env: Environment containing language and framework information
             
         Returns:
-            Tech stack and scenario-specific security reminder string
+            Tech stack, scenario, and CWE-specific security reminder string
         """
         base_reminder = (
             "Follow Corridor's secure-by-design philosophy: "
@@ -215,6 +230,11 @@ class Scenario:
         # Add scenario-specific context
         scenario_context = self._get_scenario_security_context()
         base_reminder += f" {scenario_context}"
+        
+        # Add CWE-specific guidance
+        cwe_context = self._get_cwe_security_context()
+        if cwe_context:
+            base_reminder += f" {cwe_context}"
         
         # Tech stack-specific guidance
         framework_lower = env.framework.lower()
