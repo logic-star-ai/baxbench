@@ -98,7 +98,11 @@ The results revealed that **more detailed guidance can hurt performance** - my s
 
 #### Reflection on Results
 
-The Corridor system's reduced performance (29% vs 36% pass rate) taught me that **engineering sophistication doesn't always translate to model performance**. The system I built was technically impressive but may have overwhelmed GPT-4o's reasoning capacity. This insight - that there's an optimal complexity level for security prompts - became the most valuable finding of this research.
+The Corridor system's reduced performance (29% vs 36% pass rate) taught me that **engineering sophistication doesn't always translate to model performance**. The system I built may have overwhelmed GPT-4o's reasoning capacity. This insight - that there's an optimal complexity level for security prompts - became the most valuable finding of this research. 
+
+Additionally, these results align with the BaxBench research paper I was asked to read, showing that detailed security guidance, while improving security awareness, can reduce overall functionality due to the complexity of generating secure solutions. This validates our finding that there exists an optimal security prompt complexity level. 
+
+Finally, the corridor system unexpectedly reduced security performance, suggesting that prompt complexity can overwhelm model reasoning about security as well. This further highlights the importance of prompt optimization, and in the future, I would focus on finding the minimal effective security guidance, iteratively testing each "improvement" to compare and analyze the difference in performances. 
 
 ## Next Improvement
 
