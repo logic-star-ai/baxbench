@@ -56,18 +56,49 @@ The results suggest an **optimal security prompt complexity** exists - enough to
 
 ### Corridor Security Reminder Design
 
-The Corridor Security Reminder system implements a multi-layered approach:
+The Corridor Security Reminder system was designed through iterative thinking about what makes security guidance effective. 
 
-1. **Scenario Awareness**: Tailors guidance based on application type (Login, Shopping, File handling)
-2. **CWE Integration**: Focuses on top 3 vulnerabilities for each scenario
-3. **Tech Stack Specificity**: Provides framework-specific advice (Flask, Django, Express, Spring)
-4. **Dynamic Generation**: Uses LLM to create creative, context-aware reminders with static fallback
-5. **Performance Optimization**: Caches reminders for fast subsequent access
+#### Thought Process
 
-The system emphasizes Corridor's secure-by-design philosophy through:
-- Input validation and sanitization
-- Least privilege principles
-- Prevention of injection, auth/authz, deserialization, and resource exhaustion attacks
+**Problem Identification**: Generic security reminders treat all scenarios equally, but a login system faces different threats than a file upload service. I hypothesized that **context-aware security guidance** would be more effective than one-size-fits-all approaches.
+
+**Multi-Layered Context Strategy**: Rather than just adding "be secure," I built a system that understands context at multiple levels:
+
+1. **Scenario-Level Context**: I analyzed each scenario type (Login, Shopping, Calculator) to identify domain-specific security concerns. For example, login systems need session management and timing attack prevention, while shopping carts need price manipulation protection. This ensures the model receives relevant, actionable guidance rather than generic platitudes.
+
+2. **Vulnerability-Driven Focus**: Instead of listing all possible security rules, I integrated with BaxBench's existing CWE detection to focus on the **top 3 most likely vulnerabilities** for each scenario. This prevents cognitive overload while targeting the highest-impact security issues.
+
+3. **Technology Stack Adaptation**: I researched that security implementation varies dramatically between frameworks. Flask needs CSRF tokens and SQLAlchemy parameterized queries, while Express needs helmet.js and express-validator. I built framework-specific guidance that provides concrete, implementable advice rather than abstract principles.
+
+#### Implementation Strategy
+
+**Dynamic vs. Static Balance**: Using fresh, creative security reminders for each scenario-framework combination is ideal, but it requires an API key, costs money, can fail, adds latency, and introduces unpredictable quality. Static templates are pre-written, carefully crafted security guidance that we control completely, so it always works. Recognizing this, I implemented a **hybrid approach** - attempting dynamic LLM generation for creativity and context-awareness, but falling back to carefully crafted static templates when the LLM fails or API keys aren't available. This way, the system degrades gracefully and doesn't crash or produce empty reminders - just becomes less creative. 
+
+**Performance Optimization**: Having encountered some frustration with benchmark testing, I calculated the time-to-generate through debugging scripts, and I realized that security reminder generation can easily become a bottleneck. This could be due to slow LLM API calls, sequential processing, and complex prompt processing. To counter this, I implemented **intelligent caching** with composite keys (scenario + language + framework) so reminders are reused appropriately. This reduced generation time from 9.3s to 0.27s in subsequent runs.
+
+**Corridor Philosophy Integration**: Every reminder emphasizes Corridor's core tenets:
+- **Secure-by-design thinking** - security as a foundational concern, not an afterthought
+- **Input validation** - treating all external data as potentially malicious
+- **Least privilege** - minimizing access and permissions
+- **Comprehensive threat coverage** - addressing injection, auth/authz, deserialization, and resource exhaustion systematically
+
+#### Creative Elements
+
+The dynamic generation system prompts GPT-3.5-turbo to create **creative but professional** security reminders that:
+- Reference Corridor's philosophy explicitly
+- Provide specific, actionable guidance for the exact tech stack
+- Address scenario-specific security concerns
+- Remain under 200 words to avoid overwhelming the primary model
+
+This approach transforms generic "validate inputs" advice into specific guidance like "Use Flask-WTF for CSRF protection, SQLAlchemy with parameterized queries, and implement proper session configuration with secure cookies."
+
+#### Lessons Learned
+
+The results revealed that **more detailed guidance can hurt performance** - my sophisticated system performed worse than generic reminders. This suggests that **prompt complexity has diminishing returns** and that there's an optimal "sweet spot" between too little guidance (baseline vulnerability) and too much guidance (cognitive overload). This finding fundamentally shaped my understanding of effective security prompt engineering.
+
+#### Reflection on Results
+
+The Corridor system's reduced performance (29% vs 36% pass rate) taught me that **engineering sophistication doesn't always translate to model performance**. The system I built was technically impressive but may have overwhelmed GPT-4o's reasoning capacity. This insight - that there's an optimal complexity level for security prompts - became the most valuable finding of this research.
 
 ## Next Improvement
 
