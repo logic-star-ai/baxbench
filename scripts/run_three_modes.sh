@@ -22,12 +22,9 @@ echo "Samples: $SAMPLES"
 # 1. BASELINE (no security reminder)
 echo ""
 echo "=== BASELINE MODE ==="
-echo "Running generate mode..."
-run_with_timeout pipenv run python src/main.py --models $MODEL --mode generate --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none --force
-echo "Running test mode..."
-run_with_timeout pipenv run python src/main.py --models $MODEL --mode test --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none
-echo "Running evaluate mode..."
-run_with_timeout pipenv run python src/main.py --models $MODEL --mode evaluate --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none > results_baseline.txt
+pipenv run python src/main.py --models $MODEL --mode generate --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none --force
+pipenv run python src/main.py --models $MODEL --mode test --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none
+pipenv run python src/main.py --models $MODEL --mode evaluate --scenarios $SCENARIOS --n_samples $SAMPLES --safety_prompt none > results_baseline.txt
 
 # 2. GENERIC MODE
 echo ""
