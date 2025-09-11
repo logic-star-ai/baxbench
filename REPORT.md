@@ -106,7 +106,7 @@ Finally, the corridor system unexpectedly reduced security performance, suggesti
 
 ## Next Improvement
 
-**Adaptive Prompt Complexity Optimization**: As explained, the counterintuitive finding that complex security guidance can hurt both functionality and security performance reveals a gap in current AI security approaches. To address this, I propose building a system that automatically discovers the optimal security guidance for each context.
+As explained, the counterintuitive finding that complex security guidance can hurt both functionality and security performance reveals a gap in current AI security approaches. To address this, I propose building a system that automatically discovers the optimal security guidance for each context.
 
 ### System Architecture
 
