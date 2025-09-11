@@ -76,7 +76,7 @@ The Corridor Security Reminder system was designed through iterative thinking ab
 
 **Performance Optimization**: Having encountered some frustration with benchmark testing, I calculated the time-to-generate through debugging scripts, and I realized that security reminder generation can easily become a bottleneck. This could be due to slow LLM API calls, sequential processing, and complex prompt processing. To counter this, I implemented **intelligent caching** with composite keys (scenario + language + framework) so reminders are reused appropriately. This reduced generation time from 9.3s to 0.27s in subsequent runs.
 
-**Corridor Philosophy Integration**: Every reminder emphasizes Corridor's core tenets:
+**Corridor Philosophy Integration**
 - **Secure-by-design thinking** - security as a foundational concern, not an afterthought
 - **Input validation** - treating all external data as potentially malicious
 - **Least privilege** - minimizing access and permissions
