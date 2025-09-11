@@ -31,10 +31,6 @@ cd website
 - Comprehensive unit tests (12 passing)
 - Complete benchmark results and analysis
 
-## Finding
-
-**Prompt Complexity Paradox**: More detailed security guidance can actually hurt security outcomes (26% vs 33% sec_pass@1), likely due to overwhelming the model's reasoning capacity.
-
 ## Repository
 
 GitHub: https://github.com/angelinachin/baxbench
