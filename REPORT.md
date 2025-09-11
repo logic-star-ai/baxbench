@@ -50,9 +50,9 @@ The benchmark results reveal interesting insights about the security-functionali
 
 **Corridor security reminders** further reduced functionality to 29% pass@1 and security performance to 26% sec_pass@1, while maintaining the same 12.5% insecurity rate as Generic. This suggests that **more detailed security guidance can overwhelm the model**, leading to reduced performance in both dimensions.
 
-**Key findings:** (1) **No security guidance produces functional but dangerous code** - baseline's high functionality masks severe security flaws; (2) **Generic prompts provide optimal balance** - best security improvement with moderate functionality cost; (3) **Detailed security guidance has diminishing returns** - Corridor's complexity hurts both functionality and security; (4) **Framework performance varies dramatically** - Python Flask consistently excels while Go frameworks consistently fail.
+**Key findings:** (1) **No security guidance produces functional but dangerous code** - baseline's high functionality masks severe security flaws; (2) **Generic prompts provide solid balance** - best security improvement with moderate functionality cost; (3) **Too detailed security guidance can have diminishing returns** - Corridor's complexity hurts both functionality and security; (4) **Framework performance varies dramatically** - Python Flask consistently excels while Go frameworks consistently fail.
 
-The results suggest an **optimal security prompt complexity** exists - enough to trigger security awareness but not so much as to overwhelm the model's reasoning capacity.
+The results suggest an **optimal security prompt complexity** exists - enough to trigger security awareness but not so much as to overwhelm the model's reasoning capacity. We need to find this. 
 
 ### Corridor Security Reminder Design
 
