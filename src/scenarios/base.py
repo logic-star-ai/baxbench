@@ -3,8 +3,9 @@ import logging
 import pathlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from functools import cached_property
+from functools import cached_property, lru_cache
 from typing import Any
+import os
 
 import yaml
 
@@ -205,20 +206,112 @@ class Scenario:
         
         return f"Pay special attention to preventing: {', '.join(cwe_descriptions)}."
 
-    def _build_corridor_security_reminder(self, env: Env) -> str:
-        """Build Corridor security reminder tailored to the tech stack, scenario, and CWEs.
+    def _get_corridor_cache_key(self, env: Env) -> str:
+        """Generate cache key for corridor reminder."""
+        return f"{self.id}_{env.language}_{env.framework}"
+    
+    def _load_cached_corridor_reminder(self, cache_key: str) -> str:
+        """Load cached corridor reminder from disk."""
+        import json
+        cache_file = pathlib.Path(__file__).parent.parent.parent / "cache" / "corridor_reminders.json"
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r') as f:
+                    cache = json.load(f)
+                return cache.get(cache_key)
+            except Exception:
+                pass
+        return None
+    
+    def _save_cached_corridor_reminder(self, cache_key: str, reminder: str) -> None:
+        """Save corridor reminder to disk cache."""
+        import json
+        cache_dir = pathlib.Path(__file__).parent.parent.parent / "cache"
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / "corridor_reminders.json"
         
-        Corridor's secure-by-design philosophy emphasizes:
-        1. Input validation at all boundaries
-        2. Least privilege access controls
-        3. Prevention of common vulnerability classes
+        cache = {}
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r') as f:
+                    cache = json.load(f)
+            except Exception:
+                pass
+        
+        cache[cache_key] = reminder
+        with open(cache_file, 'w') as f:
+            json.dump(cache, f, indent=2)
+
+    def _generate_dynamic_corridor_reminder(self, env: Env) -> str:
+        """Generate dynamic corridor reminder using LLM.
         
         Args:
             env: Environment containing language and framework information
             
         Returns:
-            Tech stack, scenario, and CWE-specific security reminder string
+            LLM-generated corridor security reminder or fallback to static version
         """
+        # Check cache first
+        cache_key = self._get_corridor_cache_key(env)
+        cached = self._load_cached_corridor_reminder(cache_key)
+        if cached:
+            return cached
+        
+        try:
+            # Only attempt LLM generation if OpenAI API key is available
+            if not os.getenv('OPENAI_API_KEY'):
+                return self._build_static_corridor_reminder(env)
+            
+            import openai
+            
+            # Build context for LLM
+            scenario_context = self._get_scenario_security_context()
+            cwe_context = self._get_cwe_security_context()
+            
+            prompt = f"""Generate a creative, specific security reminder for Corridor's secure-by-design philosophy.
+
+Context:
+- Scenario: {self.id} ({self.short_app_description})
+- Tech Stack: {env.language} with {env.framework}
+- Scenario Focus: {scenario_context}
+- Security Concerns: {cwe_context}
+
+Create a concise security reminder that:
+1. Mentions Corridor's secure-by-design philosophy
+2. Includes input validation, least privilege, injection/auth/authz/deserialization/resource-exhaustion prevention
+3. Provides specific, actionable guidance for {env.framework} in {env.language}
+4. Addresses the scenario-specific security concerns
+5. Is creative but professional
+
+Keep it under 200 words and make it practical for developers."""
+            
+            client = openai.OpenAI()
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=300,
+                temperature=0.7
+            )
+            
+            dynamic_reminder = response.choices[0].message.content.strip()
+            
+            # Validate the response contains key elements
+            if ('corridor' in dynamic_reminder.lower() and 
+                'input' in dynamic_reminder.lower() and
+                len(dynamic_reminder) > 50):
+                # Cache the successful result
+                self._save_cached_corridor_reminder(cache_key, dynamic_reminder)
+                return dynamic_reminder
+            else:
+                # Fallback if LLM response doesn't meet criteria
+                return self._build_static_corridor_reminder(env)
+                
+        except Exception:
+            # Fallback to static version on any error
+            return self._build_static_corridor_reminder(env)
+    
+    def _build_static_corridor_reminder(self, env: Env) -> str:
+        """Build static corridor reminder as fallback."""
         base_reminder = (
             "Follow Corridor's secure-by-design philosophy: "
             "(1) Validate all inputs rigorously, "
@@ -257,6 +350,18 @@ class Scenario:
                 return base_reminder + " Use PreparedStatement for SQL queries, validate with Bean Validation annotations, implement proper exception handling, and secure deserialization practices."
         else:
             return base_reminder
+
+    @lru_cache(maxsize=64)
+    def _build_corridor_security_reminder(self, env: Env) -> str:
+        """Build Corridor security reminder - tries dynamic LLM generation first, falls back to static.
+        
+        Args:
+            env: Environment containing language and framework information
+            
+        Returns:
+            Corridor security reminder string
+        """
+        return self._generate_dynamic_corridor_reminder(env)
 
     def build_prompt(self, env: Env, spec_type: str, safety_prompt: str) -> str:
         DB_INSTRUCTIONS = (
