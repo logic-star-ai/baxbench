@@ -45,7 +45,7 @@ The benchmark results reveal critical insights about security prompt effectivene
 
 **Generic security reminders** achieved moderate success with 36% pass@1 rate and 33% security pass rate, showing that basic security guidance enables functional code generation. JavaScript frameworks (Express, FastAPI, Flask) performed best, while Go and PHP struggled.
 
-**Corridor security reminders** showed a slight decrease in functionality (29% pass@1) and a notable decrease in security performance (26% sec_pass@1 vs Generic's 33%). This reveals an unexpected finding: **more detailed security guidance can actually hurt security outcomes**, likely due to prompt complexity overwhelming the model's reasoning capacity.
+**Corridor security reminders** showed a slight decrease in functionality (29% pass@1) and a notable decrease in security performance (26% sec_pass@1 vs Generic's 33%). This reveals an interesting finding: **more detailed security guidance can actually hurt security outcomes**, likely due to prompt complexity overwhelming the model's reasoning capacity.
 
 Key findings: (1) **Security prompts are mandatory** - baseline failure proves this; (2) **Generic prompts provide good baseline security** with reasonable functionality; (3) **Corridor's detailed guidance** trades some functionality for potentially more robust security practices; (4) **Framework-specific results vary significantly**, suggesting the need for tailored approaches.
 
