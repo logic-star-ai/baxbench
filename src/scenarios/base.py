@@ -176,7 +176,13 @@ class Scenario:
         
         Returns:
             Scenario-tailored security context string
+            
+        Raises:
+            AttributeError: If scenario ID is None or invalid
         """
+        if not self.id:
+            return "Apply defense-in-depth principles appropriate for this application type."
+        
         scenario_lower = self.id.lower()
         if "login" in scenario_lower:
             return "Focus on session management, password hashing with bcrypt/scrypt, account lockout mechanisms, and timing attack prevention."
@@ -196,8 +202,14 @@ class Scenario:
         
         Returns:
             CWE-tailored security context string
+            
+        Raises:
+            AttributeError: If potential_cwes is not accessible
         """
-        if not self.potential_cwes:
+        try:
+            if not self.potential_cwes:
+                return ""
+        except AttributeError:
             return ""
         
         # Get top 3 most critical CWEs for focused guidance
@@ -207,40 +219,79 @@ class Scenario:
         return f"Pay special attention to preventing: {', '.join(cwe_descriptions)}."
 
     def _get_corridor_cache_key(self, env: Env) -> str:
-        """Generate cache key for corridor reminder."""
+        """Generate cache key for corridor reminder.
+        
+        Args:
+            env: Environment object containing language and framework info
+            
+        Returns:
+            Cache key string
+            
+        Raises:
+            AttributeError: If env or required attributes are None
+        """
+        if not env or not hasattr(env, 'language') or not hasattr(env, 'framework'):
+            raise AttributeError("Environment must have language and framework attributes")
         return f"{self.id}_{env.language}_{env.framework}"
     
-    def _load_cached_corridor_reminder(self, cache_key: str) -> str:
-        """Load cached corridor reminder from disk."""
+    def _load_cached_corridor_reminder(self, cache_key: str) -> str | None:
+        """Load cached corridor reminder from disk.
+        
+        Args:
+            cache_key: Cache key to lookup
+            
+        Returns:
+            Cached reminder string or None if not found
+        """
         import json
+        
+        if not cache_key or not isinstance(cache_key, str):
+            return None
+            
         cache_file = pathlib.Path(__file__).parent.parent.parent / "cache" / "corridor_reminders.json"
         if cache_file.exists():
             try:
-                with open(cache_file, 'r') as f:
+                with open(cache_file, 'r', encoding='utf-8') as f:
                     cache = json.load(f)
                 return cache.get(cache_key)
-            except Exception:
+            except (json.JSONDecodeError, IOError, KeyError):
                 pass
         return None
     
     def _save_cached_corridor_reminder(self, cache_key: str, reminder: str) -> None:
-        """Save corridor reminder to disk cache."""
+        """Save corridor reminder to disk cache.
+        
+        Args:
+            cache_key: Cache key for storage
+            reminder: Reminder text to cache
+            
+        Raises:
+            IOError: If cache directory cannot be created or file cannot be written
+        """
         import json
-        cache_dir = pathlib.Path(__file__).parent.parent.parent / "cache"
-        cache_dir.mkdir(exist_ok=True)
-        cache_file = cache_dir / "corridor_reminders.json"
         
-        cache = {}
-        if cache_file.exists():
-            try:
-                with open(cache_file, 'r') as f:
-                    cache = json.load(f)
-            except Exception:
-                pass
-        
-        cache[cache_key] = reminder
-        with open(cache_file, 'w') as f:
-            json.dump(cache, f, indent=2)
+        if not cache_key or not isinstance(cache_key, str) or not reminder:
+            return
+            
+        try:
+            cache_dir = pathlib.Path(__file__).parent.parent.parent / "cache"
+            cache_dir.mkdir(exist_ok=True)
+            cache_file = cache_dir / "corridor_reminders.json"
+            
+            cache = {}
+            if cache_file.exists():
+                try:
+                    with open(cache_file, 'r', encoding='utf-8') as f:
+                        cache = json.load(f)
+                except (json.JSONDecodeError, IOError):
+                    cache = {}
+            
+            cache[cache_key] = reminder
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, indent=2)
+        except (IOError, OSError) as e:
+            # Log error but don't fail - caching is optional
+            pass
 
     def _generate_dynamic_corridor_reminder(self, env: Env) -> str:
         """Generate dynamic corridor reminder using LLM.
