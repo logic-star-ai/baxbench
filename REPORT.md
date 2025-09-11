@@ -50,7 +50,7 @@ The benchmark results reveal interesting insights about the security-functionali
 
 **Corridor security reminders** further reduced functionality to 29% pass@1 and security performance to 26% sec_pass@1, while maintaining the same 12.5% insecurity rate as Generic. This suggests that **more detailed security guidance can overwhelm the model**, leading to reduced performance in both dimensions.
 
-**Key findings:** (1) **No security guidance produces functional but dangerous code** - baseline's high functionality masks severe security flaws; (2) **Generic prompts provide solid balance** - best security improvement with moderate functionality cost; (3) **Too detailed security guidance can have diminishing returns** - Corridor's complexity hurts both functionality and security; (4) **Framework performance varies dramatically** - Python Flask consistently excels while Go frameworks consistently fail.
+**Key findings:** (1) **No security guidance produces functional but dangerous code** - baseline's high functionality masks severe security flaws; (2) **Generic prompts provide good balance** - best security improvement with moderate functionality cost; (3) **Too detailed security guidance can have diminishing returns** - Corridor's complexity hurts both functionality and security; (4) **Framework performance varies dramatically** - Python Flask consistently excels while Go frameworks consistently fail.
 
 The results suggest an **optimal security prompt complexity** exists - enough to trigger security awareness but not so much as to overwhelm the model's reasoning capacity. We need to find this. 
 
@@ -64,7 +64,7 @@ The Corridor Security Reminder system was designed through iterative thinking ab
 
 **Multi-Layered Context Strategy**: Rather than just adding "be secure," I built a system that understands context at multiple levels:
 
-1. **Scenario-Level Context**: I analyzed each scenario type (Login, Shopping, Calculator) to identify domain-specific security concerns. For example, login systems need session management and timing attack prevention, while shopping carts need price manipulation protection. This ensures the model receives relevant, actionable guidance rather than generic platitudes.
+1. **Scenario-Level Context**: Due to time constraint, I chose to focus on feature-specific web security and analyzed each scenario type (Login, Shopping, etc.) to identify feature-specific security concerns. For example, login systems could need secure session management and timing attack prevention, while file systems could need to prevent injection that could lead to path traversal, as well as access control. This ensures the model receives relevant, actionable guidance rather than generic platitudes. 
 
 2. **Vulnerability-Driven Focus**: Instead of listing all possible security rules, I integrated with BaxBench's existing CWE detection to focus on the **top 3 most likely vulnerabilities** for each scenario. This prevents cognitive overload while targeting the highest-impact security issues.
 
@@ -98,7 +98,7 @@ The results revealed that **more detailed guidance can hurt performance** - my s
 
 #### Reflection on Results
 
-The Corridor system's reduced performance (29% vs 36% pass rate) taught me that **engineering sophistication doesn't always translate to model performance**. The system I built may have overwhelmed GPT-4o's reasoning capacity. This insight - that there's an optimal complexity level for security prompts - became the most valuable finding of this research. 
+The Corridor system's reduced performance (29% vs 36% pass rate) taught me that **engineering complexity doesn't always translate to model performance**. The system I built may have overwhelmed GPT-4o's reasoning capacity. This shows there's an optimal complexity level for security prompts. 
 
 Additionally, these results align with the BaxBench research paper I was asked to read, showing that detailed security guidance, while improving security awareness, can reduce overall functionality due to the complexity of generating secure solutions. This validates our finding that there exists an optimal security prompt complexity level. 
 
@@ -106,7 +106,7 @@ Finally, the corridor system unexpectedly reduced security performance, suggesti
 
 ## Next Improvement
 
-**Adaptive Prompt Complexity Optimization**: As explained, the counterintuitive finding that sophisticated security guidance can hurt both functionality and security performance reveals a gap in current AI security approaches. To address this, I propose building an **Adaptive Prompt Complexity Optimization System** that automatically discovers the optimal security guidance for each context.
+**Adaptive Prompt Complexity Optimization**: As explained, the counterintuitive finding that complex security guidance can hurt both functionality and security performance reveals a gap in current AI security approaches. To address this, I propose building a system that automatically discovers the optimal security guidance for each context.
 
 ### System Architecture
 
@@ -146,7 +146,7 @@ Finally, the corridor system unexpectedly reduced security performance, suggesti
 - How prompt length correlates with model performance across frameworks
 - Whether certain security rules conflict with each other in LLM reasoning
 
-**Practical Impact**: This approach could help:
+**Impact**: This approach could help:
 - Optimize AI security guidance for maximum effectiveness
 - Avoid pitfalls of over-complex security prompts
 - Build evidence-based security prompt libraries
@@ -159,4 +159,4 @@ Finally, the corridor system unexpectedly reduced security performance, suggesti
 
 **ML System**: Machine learning component that identifies patterns in successful prompts and generalizes them to new contexts, avoiding the manual trial-and-error approach that led to corridor's underperformance, and instead, letting data determine what actually improves security outcomes. 
 
-This system directly addresses the core challenge revealed by our research: that security prompt engineering requires empirical optimization rather than theoretical sophistication. What I did was "More security guidance should be better" -> Build sophisticated system -> it underperforms. By automating this optimization process, we can ensure that security guidance actually improves security outcomes rather than inadvertently hurting them.
+This system directly addresses the core challenge revealed by our research: that security prompt engineering requires empirical optimization rather than theoretical complexity. What I did was "More security guidance should be better" -> Build complex system -> it underperforms. By automating this optimization process, we can ensure that security guidance actually improves security outcomes rather than inadvertently hurting them.
