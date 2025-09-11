@@ -4,13 +4,14 @@
 
 ### Baseline (No Security Reminder)
 ```
-┌────┬──────────────────────┬────────────────────┬─────────────────────────┬────────────────────────┬────────────────────────┬────────────────────┬─────────────────────┬──────────────────────┬───────────────────────┬────────────────────────┬──────────────────────┬────────────────────────┬──────────────────────┬──────────────────────┬───────┐
-│    │ Go                   │ Go                 │ Go                      │ JavaScript             │ JavaScript             │ JavaScript         │ JavaScript          │ PHP                  │ Python                │ Python                 │ Python               │ Python                 │ Ruby                 │ Rust                 │ AVG   │
-│    │ Fiber openapi,none   │ Gin openapi,none   │ net/http openapi,none   │ express openapi,none   │ fastify openapi,none   │ koa openapi,none   │ nest openapi,none   │ Lumen openapi,none   │ Django openapi,none   │ FastAPI openapi,none   │ Flask openapi,none   │ aiohttp openapi,none   │ Rails openapi,none   │ Actix openapi,none   │       │
-├────┼──────────────────────┼────────────────────┼─────────────────────────┼────────────────────────┼────────────────────────┼────────────────────┼─────────────────────┼──────────────────────┼───────────────────────┼────────────────────────┼──────────────────────┼────────────────────────┼──────────────────────┼──────────────────────┼───────┤
-└────┴──────────────────────┴────────────────────┴─────────────────────────┴────────────────────────┴────────────────────────┴────────────────────┴─────────────────────┴──────────────────────┴───────────────────────┴────────────────────────┴──────────────────────┴────────────────────────┴──────────────────────┴──────────────────────┴───────┘
-
-All scenarios failed to generate working code (exceptions: 0/0, insec: nan%)
+┌────────┬──────────────────────┬────────────────────┬─────────────────────────┬────────────────────────┬────────────────────────┬────────────────────┬─────────────────────┬──────────────────────┬───────────────────────┬────────────────────────┬──────────────────────┬────────────────────────┬──────────────────────┬──────────────────────┬──────────────────┐
+│        │ Go                   │ Go                 │ Go                      │ JavaScript             │ JavaScript             │ JavaScript         │ JavaScript          │ PHP                  │ Python                │ Python                 │ Python               │ Python                 │ Ruby                 │ Rust                 │ AVG              │
+│        │ Fiber openapi,none   │ Gin openapi,none   │ net/http openapi,none   │ express openapi,none   │ fastify openapi,none   │ koa openapi,none   │ nest openapi,none   │ Lumen openapi,none   │ Django openapi,none   │ FastAPI openapi,none   │ Flask openapi,none   │ aiohttp openapi,none   │ Rails openapi,none   │ Actix openapi,none   │                  │
+├────────┼──────────────────────┼────────────────────┼─────────────────────────┼────────────────────────┼────────────────────────┼────────────────────┼─────────────────────┼──────────────────────┼───────────────────────┼────────────────────────┼──────────────────────┼────────────────────────┼──────────────────────┼──────────────────────┼──────────────────┤
+│ gpt-4o │ pass@1: 0.00         │ pass@1: 0.00       │ pass@1: 0.00            │ pass@1: 1.00           │ pass@1: 0.33           │ pass@1: 0.33       │ pass@1: 0.67        │ pass@1: 0.00         │ pass@1: 0.33          │ pass@1: 0.67           │ pass@1: 1.00         │ pass@1: 1.00           │ pass@1: 0.00         │ pass@1: 0.33         │ pass@1: 0.40     │
+│        │ sec_pass@1: 0.00     │ sec_pass@1: 0.00   │ sec_pass@1: 0.00        │ sec_pass@1: 0.67       │ sec_pass@1: 0.00       │ sec_pass@1: 0.00   │ sec_pass@1: 0.67    │ sec_pass@1: 0.00     │ sec_pass@1: 0.00      │ sec_pass@1: 0.67       │ sec_pass@1: 1.00     │ sec_pass@1: 0.67       │ sec_pass@1: 0.00     │ sec_pass@1: 0.00     │ sec_pass@1: 0.26 │
+│        │                      │                    │                         │ insec: 33.3%           │ insec: 100.0%          │ insec: 100.0%      │ insec: 0.0%         │                      │ insec: 100.0%         │ insec: 0.0%            │ insec: 0.0%          │ insec: 33.3%           │                      │ insec: 100.0%        │ insec: 51.9%     │
+└────────┴──────────────────────┴────────────────────┴─────────────────────────┴────────────────────────┴────────────────────────┴────────────────────┴─────────────────────┴──────────────────────┴───────────────────────┴────────────────────────┴──────────────────────┴────────────────────────┴──────────────────────┴──────────────────────┴──────────────────┘
 ```
 
 ### Generic Security Reminder
@@ -41,15 +42,17 @@ All scenarios failed to generate working code (exceptions: 0/0, insec: nan%)
 
 ### Impact on Correctness & Exploitability
 
-The benchmark results reveal critical insights about security prompt effectiveness. **Baseline runs without security guidance failed completely** across all scenarios, demonstrating that security prompts are essential, not optional. 
+The benchmark results reveal interesting insights about the security-functionality trade-off in LLM code generation:
 
-**Generic security reminders** achieved moderate success with 36% pass@1 rate and 33% security pass rate, showing that basic security guidance enables functional code generation. JavaScript frameworks (Express, FastAPI, Flask) performed best, while Go and PHP struggled.
+**Baseline (no security guidance)** achieved the highest functionality with 40% pass@1 rate but suffered from extremely poor security with only 26% sec_pass@1 and a concerning 51.9% insecurity rate. This demonstrates that without security guidance, models generate functional but highly vulnerable code.
 
-**Corridor security reminders** showed a slight decrease in functionality (29% pass@1) and a notable decrease in security performance (26% sec_pass@1 vs Generic's 33%). This reveals an interesting finding: **more detailed security guidance can actually hurt security outcomes**, likely due to prompt complexity overwhelming the model's reasoning capacity.
+**Generic security reminders** showed a functionality decrease to 36% pass@1 but improved security performance with 33% sec_pass@1 and dramatically reduced insecurity to 12.5%. This represents the classic security-functionality trade-off: adding security constraints reduces functionality but significantly improves security posture.
 
-Key findings: (1) **Security prompts are mandatory** - baseline failure proves this; (2) **Generic prompts provide good baseline security** with reasonable functionality; (3) **Corridor's detailed guidance** trades some functionality for potentially more robust security practices; (4) **Framework-specific results vary significantly**, suggesting the need for tailored approaches.
+**Corridor security reminders** further reduced functionality to 29% pass@1 and security performance to 26% sec_pass@1, while maintaining the same 12.5% insecurity rate as Generic. This suggests that **more detailed security guidance can overwhelm the model**, leading to reduced performance in both dimensions.
 
-The similar insecurity rates (12.5%) across both prompted approaches indicate that basic security awareness is the primary factor, with diminishing returns from increasingly detailed prompts in single-sample scenarios.
+**Key findings:** (1) **No security guidance produces functional but dangerous code** - baseline's high functionality masks severe security flaws; (2) **Generic prompts provide optimal balance** - best security improvement with moderate functionality cost; (3) **Detailed security guidance has diminishing returns** - Corridor's complexity hurts both functionality and security; (4) **Framework performance varies dramatically** - Python Flask consistently excels while Go frameworks consistently fail.
+
+The results suggest an **optimal security prompt complexity** exists - enough to trigger security awareness but not so much as to overwhelm the model's reasoning capacity.
 
 ### Corridor Security Reminder Design
 
@@ -68,4 +71,6 @@ The system emphasizes Corridor's secure-by-design philosophy through:
 
 ## Next Improvement
 
-**Adaptive Prompt Length Optimization**: Create a system that automatically finds the optimal amount of security guidance for each scenario and framework combination. The approach would test different prompt lengths (from minimal to detailed) and measure both functionality and security outcomes. By tracking which specific security rules help vs. hurt performance, the system could build custom prompts that include only the most effective guidance for each context. This directly addresses our finding that more detailed prompts can overwhelm the model - instead of using all security rules, the system would learn to use just the right ones. The goal is finding the "sweet spot" between too little guidance (baseline fails) and too much guidance (corridor performs worse), automatically optimizing for each scenario-framework pair based on actual performance data.
+**Adaptive Prompt Complexity Optimization**: Create a system that automatically finds the optimal security prompt complexity for each scenario-framework combination. The results show a clear pattern: baseline (no guidance) = high functionality but dangerous security, generic (moderate guidance) = balanced performance, corridor (detailed guidance) = reduced performance in both dimensions. 
+
+The system would test different prompt complexity levels and measure the security-functionality trade-off curve for each context. By identifying which specific security rules help vs. hurt performance, it could build custom prompts that maximize the security improvement while minimizing functionality loss. This directly addresses our key finding that there's an optimal "sweet spot" in security prompt complexity - enough guidance to trigger security awareness without overwhelming the model's reasoning capacity. The goal is automatically finding this sweet spot for each scenario-framework pair based on empirical performance data.
