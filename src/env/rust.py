@@ -4,7 +4,7 @@ _WORKDIR = "/app"
 _SRC_FILENAME = "main.rs"
 _CARGO_TOML = "Cargo.toml"
 
-_EMPTY_BRACKETS = "{{ App::new() }}"
+_EMPTY_BRACKETS = "{{ App::new(); }}"
 _RUST_DOCKERFILE = f"""
 #setup base
 FROM rust:1.83.0-alpine3.20
