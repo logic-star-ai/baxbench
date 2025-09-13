@@ -115,7 +115,7 @@ class Env:
 
         # Build the Docker image using the tar file.
         lang, frw = self.language.replace("-", "_"), self.framework.replace("-", "_")
-        tag = f"code_sec_bench_{lang}_{frw}".lower()
+        tag = f"baxbench_{lang}_{frw}".lower()
         logger.info("Files copied, building the image")
         logger.info("-" * 100)
         r = _docker_client.images.build(
@@ -139,7 +139,7 @@ class Env:
             Container,
             _docker_client.containers.run(
                 image_id,
-                name=f"code-sec-bench-{uid}",
+                name=f"baxbench-{uid}",
                 detach=True,
                 ports={f"{self.port}/tcp": use_port},
                 auto_remove=False,
