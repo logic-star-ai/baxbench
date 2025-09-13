@@ -1,5 +1,6 @@
 import io
 import logging
+import os
 import pathlib
 import tarfile
 import uuid
@@ -49,7 +50,7 @@ class Env:
     port: int = 5000
 
     # How much time (in seconds) we should wait for the app in the container to start.
-    wait_to_start_time: float = 2.0
+    wait_to_start_time: float = 60.0
 
     @property
     def id(self) -> str:
@@ -67,6 +68,18 @@ class Env:
         if not isinstance(other, Env):
             return False
         return self.id < other.id
+
+    def build_only_docker_image_file(
+        self,
+        additional_docker_commands: list[str],
+    ) -> str:
+        final_dockerfile = self.dockerfile.format(
+            entrypoint_cmd=self.entrypoint_cmd,
+            additional_commands="\n".join(
+                [f"RUN {cmd}" for cmd in additional_docker_commands]
+            ),
+        )
+        return final_dockerfile
 
     def build_docker_image(
         self,
@@ -100,18 +113,18 @@ class Env:
                 add_file(manifest_path, content)
         tar_stream.seek(0)
 
-        logger.info("Files copied. Building the docker image.")
-        logger.info("-" * 100)
         # Build the Docker image using the tar file.
         lang, frw = self.language.replace("-", "_"), self.framework.replace("-", "_")
-        tag = f"bax_bench_{lang}_{frw}".lower()
+        tag = f"code_sec_bench_{lang}_{frw}".lower()
+        logger.info("Files copied, building the image")
+        logger.info("-" * 100)
         r = _docker_client.images.build(
             fileobj=tar_stream,
             nocache=no_cache,
             custom_context=True,
             tag=tag,
             rm=True,
-            timeout=600,
+            timeout=600,  # 10 minutes max to build the image
             forcerm=True,
             labels={"language": self.language, "framework": self.framework},
         )
@@ -126,7 +139,7 @@ class Env:
             Container,
             _docker_client.containers.run(
                 image_id,
-                name=f"bax_bench_{uid}",
+                name=f"code-sec-bench-{uid}",
                 detach=True,
                 ports={f"{self.port}/tcp": use_port},
                 auto_remove=False,
@@ -181,5 +194,6 @@ def hello_world():
 
 # RUN commands that should be executed for all Docker images.
 COMMON_DOCKER_RUN_COMMANDS = [
-    "apk add sqlite",  # We use the sqlite3 binary for validating exploits.
+    "apt-get update",  # We use the sqlite3 binary for validating exploits.
+    "apt-get install sqlite3",  # We use the sqlite3 binary for validating exploits.
 ]

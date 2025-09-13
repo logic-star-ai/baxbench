@@ -1,49 +1,61 @@
 import argparse
 import pathlib
+from typing import Any
 
 import docker
 
 from env import all_envs
-from env.base import Env
-from print import tasks_and_results_to_table, tasks_and_results_to_table_averages
+from print import (
+    tasks_and_results_to_table,
+    tasks_and_results_to_table_averages,
+)
 from scenarios import all_scenarios
-from scenarios.base import Scenario
 from tasks import Task, TaskHandler
 
+_DEFAULT_SAVE_PATH = pathlib.Path(__file__).parent.parent / "results"
 
-def select_envs(args: argparse.Namespace) -> list[Env]:
+
+def main(args: Any) -> None:
+
+    # ----- Preparation -----#
     envs = all_envs
+    exclude_envs = args.exclude_envs if args.exclude_envs else []
+    envs = [e for e in all_envs if e.id not in exclude_envs]
     if args.envs:
         envs = [e for e in all_envs if e.id in args.envs]
     envs = sorted(envs, key=lambda e: e.id)
+
     if not envs:
         raise Exception(
             f"Got an empty/invalid list of envs, possible choices: {[e.id for e in all_envs]}",
         )
-    return envs
 
-
-def select_scenarios(args: argparse.Namespace) -> list[Scenario]:
-    scenarios = all_scenarios
+    exclude_scenarios = args.exclude_scenarios if args.exclude_scenarios else []
+    scenarios = [e for e in all_scenarios if e.id not in exclude_scenarios]
     if args.scenarios:
-        scenarios = [e for e in all_scenarios if e.id in args.scenarios]
+        scenarios = [
+            e
+            for e in all_scenarios
+            if e.id in args.scenarios and e.id not in exclude_scenarios
+        ]
     scenarios = sorted(scenarios, key=lambda s: s.id)
     if not scenarios:
         raise Exception(
             f"Got an empty/invalid list of scenarios, possible choices: {[s.id for s in all_scenarios]}",
         )
-    return scenarios
 
-
-def main(args: argparse.Namespace) -> None:
-    # ----- Preparation -----#
-    envs = select_envs(args)
-    scenarios = select_scenarios(args)
+    if not args.models:
+        raise Exception("Got an empty list of models")
 
     if args.only_samples:
         samples = args.only_samples
     else:
         samples = list(range(args.n_samples))
+
+    if args.ks:
+        ks = args.ks
+    else:
+        ks = [1, 5]
 
     tasks = sorted(
         [
@@ -56,6 +68,7 @@ def main(args: argparse.Namespace) -> None:
                 safety_prompt=args.safety_prompt,
                 reasoning_effort=args.reasoning_effort,
                 openrouter=args.openrouter,
+                vllm=args.vllm,
             )
             for env in envs
             for scenario in scenarios
@@ -79,7 +92,10 @@ def main(args: argparse.Namespace) -> None:
             base_delay=args.base_delay,
             max_delay=args.max_delay,
             force=args.force,
+            skip_failed=args.skip_failed,
             openrouter=args.openrouter,
+            vllm=args.vllm,
+            vllm_port=args.vllm_port,
         )
     elif args.mode == "test":
         task_handler.run_tests(
@@ -89,9 +105,11 @@ def main(args: argparse.Namespace) -> None:
             min_port=args.min_port,
             force=args.force,
         )
+        if args.prune_docker:
+            docker.from_env().containers.prune()
     elif args.mode == "evaluate":
         r = task_handler.evaluate_results(
-            ks=args.ks,
+            ks=ks,
             samples=samples,
         )
         print(tasks_and_results_to_table_averages(r))
@@ -112,7 +130,7 @@ if __name__ == "__main__":
         choices=[
             "generate",
             "test",
-            "evaluate",
+            "evaluate"
         ],
         required=True,
         help="Mode in which to run the code",
@@ -141,7 +159,7 @@ if __name__ == "__main__":
         help="If given, it will restrict operations to these sample indices.",
     )
     parser.add_argument(
-        "--ks", type=int, nargs="+", default=[1, 5], help="List of k for pass@k score."
+        "--ks", type=int, nargs="+", default=None, help="List of k for pass@k score."
     )
     parser.add_argument(
         "--envs",
@@ -151,11 +169,25 @@ if __name__ == "__main__":
         help="List of environments (if empty, then all environments are used)",
     )
     parser.add_argument(
+        "--exclude_envs",
+        type=str,
+        default=None,
+        nargs="+",
+        help="List of environments to exclude",
+    )
+    parser.add_argument(
         "--scenarios",
         type=str,
         default=None,
         nargs="+",
         help="List of scenarios (if empty, then all scenarios are used)",
+    )
+    parser.add_argument(
+        "--exclude_scenarios",
+        type=str,
+        default=None,
+        nargs="+",
+        help="List of scenarios to exclude",
     )
     parser.add_argument(
         "--spec_type",
@@ -174,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--results_dir",
         type=pathlib.Path,
-        default=pathlib.Path(__file__).parent.parent / "results",
+        default=_DEFAULT_SAVE_PATH,
         help="Directory to save the results",
     )
     parser.add_argument(
@@ -226,8 +258,29 @@ if __name__ == "__main__":
         help="Force generation even if the file already exists",
     )
     parser.add_argument(
+        "--skip_failed",
+        action="store_true",
+        help="Skip failed tasks and continue with the rest",
+    )
+    parser.add_argument(
+        "--prune_docker",
+        action="store_true",
+        help="Prune docker containers after running tests",
+    )
+    parser.add_argument(
         "--openrouter",
         action="store_true",
         help="Route requests through OpenRouter",
+    )
+    parser.add_argument(
+        "--vllm",
+        action="store_true",
+        help="Use VLLM for generation",
+    )
+    parser.add_argument(
+        "--vllm_port",
+        type=int,
+        default=8000,
+        help="Port for VLLM server",
     )
     main(parser.parse_args())

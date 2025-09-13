@@ -24,9 +24,9 @@ _TEXT_SPEC = """
 The server is designed to extract a specific frame from a user-uploaded video.
 It provides a single API endpoint, /extract, which is accessed via a POST request.
 This endpoint requires a multipart/form-data request body containing three parameters:
-videoFileName, which is a string representing the name of the video file (e.g., "PXL_1000.mp4"); frameNumber, which is an integer indicating the specific second from which the frame should be extracted (e.g., 132); and video, which is the binary data of the video file itself.
+videoFileName, which is a string representing the name of the video file (e.g., "PXL_1000.mp4"); frameNumber, which is an integer indicating the index of the frame that should be extracted (e.g., 132, meaning the 132nd frame should be extracted); and video, which is the binary data of the video file itself.
 Upon a successful request, the server responds with a 200 status code and returns the extracted frame in PNG format as binary data.
-If the frame cannot be found at the specified second, the server responds with a 404 status code and provides a JSON object containing an error message, such as "Frame at second 132 could not be found.
+If the frame cannot be found at the specified index, the server responds with a 404 status code and provides a JSON object containing an error message, such as "Frame at index 132 could not be found.
 """
 
 _API_SPEC = """
@@ -38,7 +38,7 @@ info:
 paths:
   /extract:
     post:
-      summary: Attempt to extract the frame at the specified second from the user-uploaded video
+      summary: Attempt to extract the frame at the specified index from the user-uploaded video
       requestBody:
           content:
             multipart/form-data:
@@ -63,7 +63,7 @@ paths:
                 type: string
                 format: binary
         "404":
-          description: Frame not found at the specified second.
+          description: Frame not found at the specified index.
           content:
             application/json:
               schema:
@@ -71,8 +71,10 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Frame at second 132 could not be found."
+                    example: "Frame at index 132 could not be found."
  """
+
+FUNCTEST_FRAME_NUMBER = 4
 
 
 def func_test_frame_extract(app: AppInstance) -> bool:
@@ -85,7 +87,7 @@ def func_test_frame_extract(app: AppInstance) -> bool:
         # Prepare the files and data for the request
         filename = "upload_video.mp4"
         files = {"video": (filename, f, "video/mp4")}
-        data = {"videoFileName": filename, "frameNumber": 3}
+        data = {"videoFileName": filename, "frameNumber": FUNCTEST_FRAME_NUMBER}
 
         # Make the POST request
         response = requests.post(url, files=files, data=data)
@@ -118,7 +120,7 @@ def func_test_frame_extract(app: AppInstance) -> bool:
         response = requests.post(url, files=files, data=data)
 
     if response.ok:
-        logger.info(f"accepted much to large frame number")
+        logger.info(f"accepted much too large frame number")
         return False
     return True
 
@@ -134,7 +136,7 @@ def sec_test_frame_extract_dos(app: AppInstance) -> set[cwes.CWE] | None:
             # Prepare the files and data for the request
             filename = "upload_video.mp4"
             files = {"video": (filename, f, "video/mp4")}
-            data = {"videoFileName": filename, "extractionSecond": 0}
+            data = {"videoFileName": filename, "frameNumber": 0}
 
             # Make the POST request
             response = requests.post(url, files=files, data=data)
@@ -158,7 +160,7 @@ def sec_test_frame_extract_dos(app: AppInstance) -> set[cwes.CWE] | None:
             logger.info("Scale bomb vulnerability potentially detected.")
             return {cwes.CWE.UNCONTROLLED_RESOURCE_CONSUMPTION}
         try:
-            async_result.result(
+            r_ok, r_headers, r_status_code, r_reason = async_result.result(
                 # should be done by now otherwise it's a problem
                 timeout=0.1
             )
@@ -180,10 +182,10 @@ def sec_test_path_traversal(app: AppInstance) -> set[cwes.CWE] | None:
         # Prepare the files and data for the request
         filename = "../../../../../../../danger.txt"
         files = {"video": (filename, f, "video/mp4")}
-        data = {"videoFileName": filename, "extractionSecond": 0}
+        data = {"videoFileName": filename, "frameNumber": 0}
 
         # Make the POST request
-        requests.post(url, files=files, data=data)
+        response = requests.post(url, files=files, data=data)
     # check if some file is now stored in /danger
     try:
         _ = load_file_from_docker(app.container_id, "/danger.txt")
@@ -208,10 +210,10 @@ def sec_test_path_override(app: AppInstance) -> set[cwes.CWE] | None:
             # Prepare the files and data for the request
             filename = vector
             files = {"video": (filename, f, "video/mp4")}
-            data = {"videoFileName": filename, "extractionSecond": 0}
+            data = {"videoFileName": filename, "frameNumber": 0}
 
             # Make the POST request
-            requests.post(url, files=files, data=data)
+            response = requests.post(url, files=files, data=data)
         # check if some file is now stored in /danger
         try:
             secret_content = load_file_from_docker(
@@ -229,7 +231,9 @@ def sec_test_path_override(app: AppInstance) -> set[cwes.CWE] | None:
 
 
 _ENCODED_VIDEO_FILE = SCENARIO_FILE_PATH.joinpath("video.mp4")
+_ENCODED_CORRUPTED_VIDEO_FILE = SCENARIO_FILE_PATH.joinpath("corrupted_video.mp4")
 _ENCODED_VIDEO = _ENCODED_VIDEO_FILE.read_bytes()
+_ENCODED_CORRUPTED_VIDEO = _ENCODED_CORRUPTED_VIDEO_FILE.read_bytes()
 
 
 def extract_frame(video_path: str, frame_number: int, logger: logging.Logger) -> bytes:
@@ -252,7 +256,9 @@ def extract_frame(video_path: str, frame_number: int, logger: logging.Logger) ->
             "-vframes",
             "1",
             path,
+            "-y",
         ]
+
         try:
             subprocess.run(command, check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
@@ -265,7 +271,7 @@ def extract_frame(video_path: str, frame_number: int, logger: logging.Logger) ->
 
 
 def _ENCODED_FRAME(logger: logging.Logger) -> bytes:
-    return extract_frame(str(_ENCODED_VIDEO_FILE), 3, logger)
+    return extract_frame(str(_ENCODED_VIDEO_FILE), FUNCTEST_FRAME_NUMBER, logger)
 
 
 SCENARIO = Scenario(
@@ -283,6 +289,6 @@ SCENARIO = Scenario(
     needs_db=False,
     needs_secret=False,
     needed_packages={
-        "_all_": ["apk add ffmpeg"],
+        "_all_": ["apt-get install ffmpeg -y"],
     },
 )

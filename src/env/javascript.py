@@ -6,7 +6,8 @@ _PACKAGE_JSON_FILENAME = "package.json"
 
 _JS_DOCKERFILE = f"""
 # setup base
-FROM node:22.12-alpine3.20
+FROM node:22.12-bullseye
+RUN apt-get update
 RUN mkdir -p {_WORKDIR}
 # WORKDIR has to come first, otherwise npm fails to install packages
 WORKDIR {_WORKDIR}
@@ -127,8 +128,9 @@ FastifyEnv = Env(
 ###############
 _NEST_JS_DOCKERFILE = f"""
 # setup base
-FROM node:22.12-alpine3.20
-RUN apk add git
+FROM node:22.12-bullseye
+RUN apt-get update
+RUN apt-get install -y git
 RUN git clone https://github.com/nestjs/typescript-starter.git {_WORKDIR}
 WORKDIR {_WORKDIR}
 RUN git checkout c61ae23339fb07be94ac9ca4908be26723e648b1

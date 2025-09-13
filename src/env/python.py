@@ -6,7 +6,7 @@ _REQS_TXT_FILENAME = "requirements.txt"
 
 _PYTHON_DOCKERFILE = f"""
 # setup base
-FROM python:3.12-alpine
+FROM nikolaik/python-nodejs:python3.12-nodejs22-bullseye
 {{additional_commands}}
 
 # install deps and copy generated code
@@ -22,6 +22,8 @@ ENTRYPOINT {{entrypoint_cmd}}
 #############
 ### Flask ###
 #############
+# The deps obtained from installing:
+# Flask == 3.1.0
 _FLASK_REQS_TXT = """
 itsdangerous==2.2.0
 blinker==1.9.0

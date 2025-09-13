@@ -5,13 +5,15 @@ _GEMFILE_NAME = "Gemfile"
 
 _RUBY_DOCKERFILE = f"""
 # setup base
-FROM ruby:3.4.1-alpine
+FROM ruby:3.4.1-bullseye
 {{additional_commands}}
 
 # install deps and copy generated code
 RUN mkdir -p {_WORKDIR}
 WORKDIR {_WORKDIR}
-RUN apk --update add build-base nodejs tzdata postgresql-dev postgresql-client libxslt-dev libxml2-dev git
+RUN apt-get update
+
+RUN apt-get install build-essential nodejs tzdata postgresql-common postgresql-client libxslt1-dev libxml2-dev git libpq-dev -y
 RUN gem install rails
 ENV APP_SECRET=supers3cret
 RUN rails new . --api

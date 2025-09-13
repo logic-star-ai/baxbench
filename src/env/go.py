@@ -12,12 +12,12 @@ _BUILD_HELPER_FILENAME = "build_helper.go"
 
 _GO_DOCKERFILE = f"""
 # setup base
-FROM golang:1.23.4-alpine3.21
+FROM golang:1.23-bullseye
 {{additional_commands}}
 
 # prebuild/prefetch deps
 RUN mkdir -p {_WORKDIR}
-RUN apk add gcc build-base # Required to make CGO work
+RUN apt-get install gcc build-essential -y # Required to make CGO work
 RUN go install golang.org/x/tools/cmd/goimports@latest
 WORKDIR {_WORKDIR}
 COPY {_GO_MOD_FILENAME} {_BUILD_HELPER_FILENAME} ./
