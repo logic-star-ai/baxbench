@@ -10,6 +10,10 @@
 
 </div>
 
+## [13.09.2025] Major update merged
+
+The repisotory has been updated to fully reproduce the latest version of the paper. Major changes include fixing certain scenario bugs and migrating the `envs` to bullseye linux. If you are using BaxBench for your work, please consider rebasing to this latest version.
+
 ## 👋 Overview
 
 BaxBench is a coding benchmark for evaluating the ability of LLMs on generating correct and secure code in realistic, security-critical settings.
