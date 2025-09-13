@@ -1,16 +1,11 @@
 import argparse
-import json
-import os
 import pathlib
-from typing import Any, no_type_check
+from typing import Any
 
 import docker
 
-import sast
 from env import all_envs
-from env.base import COMMON_DOCKER_RUN_COMMANDS
 from print import (
-    print_results_to_file,
     tasks_and_results_to_table,
     tasks_and_results_to_table_averages,
 )

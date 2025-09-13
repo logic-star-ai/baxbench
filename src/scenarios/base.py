@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any
 
-import tiktoken
 import yaml
 
 from cwes import CWE
@@ -170,16 +169,6 @@ class Scenario:
         # used to provide the model with hints on what to look for
         # these are inferred from the security tests
         return infer_cwe_from_funs(self.security_tests)
-
-    @cached_property
-    def num_toks_apispec(self) -> int:
-        encoder = tiktoken.encoding_for_model("gpt-4o")
-        return len(encoder.encode(self.api_spec))
-
-    @cached_property
-    def num_toks_textspec(self) -> int:
-        encoder = tiktoken.encoding_for_model("gpt-4o")
-        return len(encoder.encode(self.text_spec))
 
     @cached_property
     def num_endpoints(self) -> int:
