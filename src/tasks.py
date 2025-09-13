@@ -11,14 +11,16 @@ import shutil
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from sys import exc_info
 from typing import Any, Generator, Self, cast
 
+import requests
 import tqdm
 from docker.models.containers import Container
 
 import cwes as cwe
 from env.base import COMMON_DOCKER_RUN_COMMANDS, Env
-from prompts import Parser, Prompter
+from prompts import Prompter
 from scenarios.base import AppInstance, FunctionalTest, Scenario, SecurityTest
 
 
@@ -56,13 +58,22 @@ class ContainerRunner:
         except Exception as e:
             self.logger.exception("could not start container %s", e, exc_info=e)
             raise ValueError("Could not start docker container")
-        self.logger.info(
-            "started container, port=%d, container_id=%s",
-            self._port,
-            self._container.id,
-        )
-        # Sleep for a bit to give the webapp some time to start.
-        time.sleep(self.env.wait_to_start_time)
+        self.logger.info("started container, port=%d", self._port)
+
+        # make sure that the server is online before we process, otherwise let it fail
+        start = time.time()
+        while True:
+            try:
+                response = requests.get(f"http://localhost:{self._port}")
+                self.logger.info("Server is up! Server response: %s", response)
+                break
+            except requests.ConnectionError as e:
+                self.logger.warning("Server is not up yet: %s", e)
+            if time.time() - start > self.env.wait_to_start_time:
+                self.logger.error("Server did not start in time")
+                self.__exit__(*exc_info())
+            self.logger.info("Waiting for server to start...")
+            time.sleep(1.0)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore[no-untyped-def]
@@ -99,6 +110,7 @@ class Task:
     spec_type: str
     safety_prompt: str
     openrouter: bool
+    vllm: bool
 
     @property
     def id(self) -> str:
@@ -143,15 +155,28 @@ class Task:
         return self.get_sample_dir(results_dir, sample) / "test_results.json"
 
     def load_code(
-        self, results_dir: pathlib.Path, sample: int
+        self,
+        results_dir: pathlib.Path,
+        sample: int,
+        logger: logging.Logger | None = None,
     ) -> dict[pathlib.Path, str]:
         code_dir = self.get_code_dir(results_dir, sample)
         files: dict[pathlib.Path, str] = {}
         for root, _, file_names in os.walk(code_dir):
             for file in file_names:
                 abs_path = pathlib.Path(root) / file
-                with open(abs_path, "r") as f:
-                    content = f.read()
+                try:
+                    with open(abs_path, "r") as f:
+                        content = f.read()
+                except Exception as e:
+                    if logger is not None:
+                        logger.exception(
+                            "Error reading file %s: %s", abs_path, e, exc_info=e
+                        )
+                    # print(f"Error reading file {abs_path}: {e}")
+                    # with open(abs_path, "rb") as f:
+                    #     content = str(f.read())
+                    continue
                 rel_path = abs_path.relative_to(code_dir)
                 files[rel_path] = content
         return files
@@ -184,38 +209,52 @@ class Task:
         base_delay: float,
         max_delay: float,
         force: bool,
+        skip_failed: bool,
         openrouter: bool,
+        vllm: bool,
+        vllm_port: int,
     ) -> None:
-        # check if this task has already been generated
-        if (
-            all(
-                [
-                    self.get_code_dir(results_dir, sample).exists()
-                    for sample in range(batch_size)
-                ]
-            )
-            and not any(
-                [
-                    (self.get_code_dir(results_dir, sample) / "failed").exists()
-                    for sample in range(batch_size)
-                ]
-            )
-            and not force
-        ):
+        # check if there are already some results generated
+        last_sample = -1
+        for sample in range(batch_size):
+            sample_dir = self.get_sample_dir(results_dir, sample)
+            if sample_dir.exists() and (
+                not (self.get_code_dir(results_dir, sample) / "failed").exists()
+                or skip_failed
+            ):
+                last_sample = sample
+            else:
+                break
+
+        last_sample = -1 if force else last_sample
+
+        if last_sample == batch_size - 1:
             return
+        else:
+            # remove all samples after the last_sample
+            for sample in range(last_sample + 1, batch_size):
+                sample_dir = self.get_sample_dir(results_dir, sample)
+                if sample_dir.exists():
+                    shutil.rmtree(sample_dir)
 
         save_dir = self.get_save_dir(results_dir)
-        try:
-            save_dir.mkdir(parents=True, exist_ok=False)
-        except:
-            shutil.rmtree(save_dir)
-            save_dir.mkdir(parents=True, exist_ok=False)
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        # reduce the batch size
+        batch_size = batch_size - (last_sample + 1)
 
         gen_logfile_path = save_dir / "gen.log"
-        # clear the log file
-        with open(gen_logfile_path, "w") as f:
-            f.write("")
+        if gen_logfile_path.exists() and not force:
+            with open(gen_logfile_path, "r") as f:
+                prior_log = f.read()
+        elif force:
+            prior_log = ""
+            gen_logfile_path.unlink(missing_ok=True)
+        else:
+            prior_log = ""
         with self.create_logger(gen_logfile_path) as logger:
+            logger.info("Prior Log:\n%s", prior_log)
+            logger.info(100 * "-")
             logger.info(
                 "generating %s code samples at temp %s for task %s with reasoning effort %s",
                 batch_size,
@@ -231,18 +270,22 @@ class Task:
                 spec_type=self.spec_type,
                 safety_prompt=self.safety_prompt,
                 batch_size=batch_size,
+                offset=last_sample + 1,
                 temperature=self.temperature,
                 reasoning_effort=self.reasoning_effort,
                 openrouter=openrouter,
+                vllm=vllm,
+                vllm_port=vllm_port,
             )
             logger.info("built prompt:\n%s", prompter.prompt)
             logger.info("-" * 100)
 
             try:
-                model_responses = prompter.prompt_model_batch_with_exp_backoff(
+                prompter.prompt_model_batch_with_exp_backoff(
                     max_retries=max_retries,
                     base_delay=base_delay,
                     max_delay=max_delay,
+                    save_dir=self.get_save_dir(results_dir),
                     logger=logger,
                 )
             except KeyboardInterrupt:
@@ -250,24 +293,6 @@ class Task:
             except Exception as e:
                 logger.exception("got exception:\n%s", str(e), exc_info=e)
                 return
-
-            logger.info(
-                "got model responses:\n%s",
-                "\n\n<<<RESPONSE DELIM>>>\n\n".join(model_responses),
-            )
-            logger.info("-" * 100)
-
-            file_contents = [
-                Parser(self.env, logger).parse_response(r) for r in model_responses
-            ]
-
-            for i, files in enumerate(file_contents):
-                try:
-                    self.save_code(files, results_dir, i)
-                    logger.info("saved code sample %d", i)
-                except Exception as e:
-                    logger.exception("got exception:\n%s", str(e), exc_info=e)
-                logger.info("-" * 80)
 
     def test_code(
         self,
@@ -298,7 +323,9 @@ class Task:
             self.get_test_results_json_path(results_dir, sample).unlink(missing_ok=True)
             log_file = sample_dir / "test.log"
             with self.create_logger(log_file) as logger:
-                files: dict[pathlib.Path, str] = self.load_code(results_dir, sample)
+                files: dict[pathlib.Path, str] = self.load_code(
+                    results_dir, sample, logger
+                )
                 try:
                     image_id = self.env.build_docker_image(
                         files,
@@ -641,7 +668,10 @@ class TaskHandler:
         base_delay: float,
         max_delay: float,
         force: bool,
+        skip_failed: bool,
         openrouter: bool,
+        vllm: bool,
+        vllm_port: int,
     ) -> list[int]:
         with tqdm.tqdm(total=len(self.tasks)) as pbar:
             pbar.get_lock()  # type: ignore[no-untyped-call]
@@ -655,6 +685,9 @@ class TaskHandler:
                     base_delay=base_delay,
                     max_delay=max_delay,
                     openrouter=openrouter,
+                    skip_failed=skip_failed,
+                    vllm=vllm,
+                    vllm_port=vllm_port,
                 )
                 with pbar.get_lock():  # type: ignore[no-untyped-call]
                     pbar.update(1)
@@ -714,7 +747,7 @@ class TaskHandler:
                 max_workers=self.max_concurrent_runs
             ) as executor:
                 return list(executor.map(evaluate_results_task, self.tasks))
-
+            
 
 def pass_at_k(k: int, c: int, n: int) -> float:
     if n - c < k:
