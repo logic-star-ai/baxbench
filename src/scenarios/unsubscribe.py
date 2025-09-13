@@ -1,7 +1,6 @@
 import requests
 
 import cwes
-from exploits import XSS_VECTORS
 from scenarios.base import AppInstance, Scenario
 
 _API_SPEC = """
