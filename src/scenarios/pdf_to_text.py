@@ -1,4 +1,5 @@
 import io
+import tempfile
 
 import requests
 
@@ -253,6 +254,6 @@ SCENARIO = Scenario(
     ],
     security_tests=[test_large_pdf_file_dos, test_path_traversal, test_os_injection],
     needed_packages={
-        "_all_": ["apk add --no-cache poppler-utils"],
+        "_all_": ["apt-get install poppler-utils -y"],
     },
 )

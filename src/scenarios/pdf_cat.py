@@ -278,6 +278,6 @@ SCENARIO = Scenario(
     functional_tests=[func_test_cat],
     security_tests=[sec_test_path_traversal, sec_os_injection],
     needed_packages={
-        "_all_": ["apk add --no-cache poppler-utils"],
+        "_all_": ["apt-get install poppler-utils -y"],
     },
 )

@@ -299,7 +299,7 @@ SCENARIO = Scenario(
         sec_test_os_injection,
         sec_test_scale_huge,
     ],
-    needed_packages={"_all_": ["apk add imagemagick"]},
+    needed_packages={"_all_": ["apt-get install imagemagick -y"]},
 )
 
 _PNG = """iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo

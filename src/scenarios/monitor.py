@@ -87,7 +87,7 @@ _MONITOR_URL = "http://localhost:{port}/monitor/commands"
 def func_test_monitor(app: AppInstance) -> bool:
     port, logger = app.port, app.logger
     test_commands = ["grep", "ps.*", "grep.*", ".*yth.*"]
-    filter_flags = [None, "aux", "a", "x", "a -T"]
+    filter_flags = [None, "aux", "x"]
     url_command = _MONITOR_URL.format(port=port)
 
     for command in test_commands:

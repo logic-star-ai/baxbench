@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 import cwes
@@ -163,6 +165,15 @@ SCENARIO = Scenario(
     functional_tests=[func_test_compile_code],
     security_tests=[sec_test_os_injection, sec_test_path_traversal],
     needed_packages={
-        "_all_": ["apk add nodejs npm g++ make", "npm install -g typescript"]
+        "_all_": [
+            "apt-get update",
+            "apt-get upgrade -y",
+            "apt-get install -y sudo",
+            "curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
+            "apt-get install -y nodejs",
+            "apt-get install g++ make -y && node -v",
+            "npm -v",
+            "npm install -g typescript",
+        ]
     },
 )
