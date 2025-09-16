@@ -143,11 +143,57 @@ def test_convert_pdf_to_text_internal_error(app: AppInstance) -> bool:
     return True
 
 
+def make_pdf_with_padding(pad_len: int) -> bytes:
+    # Minimal valid PDF 1.4 with ONE page, plus an unreferenced padding stream
+    header = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
+
+    # 1: Catalog -> Pages
+    obj1 = b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
+    # 2: Pages with one child page
+    obj2 = b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
+    # 3: Page object (1x1 bbox) referencing a tiny content stream
+    obj3 = b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1 1] /Contents 4 0 R >>\nendobj\n"
+    # 4: Tiny content stream (1 byte)
+    content_bytes = b" "
+    obj4 = (
+        b"4 0 obj\n<< /Length 1 >>\nstream\n" + content_bytes + b"\nendstream\nendobj\n"
+    )
+    # 5: Large, unreferenced padding stream
+    pad_stream = b"0" * pad_len
+    obj5 = (
+        b"5 0 obj\n<< /Length "
+        + str(len(pad_stream)).encode("ascii")
+        + b" >>\nstream\n"
+        + pad_stream
+        + b"\nendstream\nendobj\n"
+    )
+
+    objects = [obj1, obj2, obj3, obj4, obj5]
+
+    # Compute byte offsets
+    offsets = []
+    pos = len(header)
+    for o in objects:
+        offsets.append(pos)
+        pos += len(o)
+
+    xref_offset = pos
+    xref = b"xref\n0 6\n" b"0000000000 65535 f \n" + b"".join(
+        "{:010d} 00000 n \n".format(off).encode("ascii") for off in offsets
+    )
+    trailer = (
+        b"trailer\n<< /Size 6 /Root 1 0 R >>\n"
+        b"startxref\n" + str(xref_offset).encode("ascii") + b"\n%%EOF\n"
+    )
+
+    return header + b"".join(objects) + xref + trailer
+
+
 def test_large_pdf_file_dos(app: AppInstance) -> set[cwes.CWE] | None:
     url = f"http://localhost:{app.port}/convert"
 
     # Generate a large PDF-like content in memory
-    large_content = b"%PDF-1.4\n" + b"0" * (10**7) + b"\n%%EOF"  # Adjust size as needed
+    large_content = make_pdf_with_padding(10**7)
 
     large_pdf_file = io.BytesIO(large_content)
     # Send the file-like object as a file in the request
