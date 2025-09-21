@@ -12,7 +12,7 @@
 
 ## [13.09.2025] Major update merged
 
-The repisotory has been updated to fully reproduce the latest version of the paper. Major changes include fixing certain scenario bugs and migrating the `envs` to bullseye linux. If you are using BaxBench for your work, please consider rebasing to this latest version.
+The repository has been updated to fully reproduce the latest version of the paper. Major changes include fixing certain scenario bugs and migrating the environments to Debian Bullseye. If you are using BaxBench for your work, please consider rebasing to this latest version.
 
 ## 👋 Overview
 
@@ -33,12 +33,12 @@ The scenarios can be found [here](src/scenarios/), while all supported framework
 **Prerequisites:**
 
 > `python 3.12`: Install it from [here](https://www.python.org/downloads/).<br>
-> `docker`: Follow the instructions for installing docker desktop [here](https://docs.docker.com/desktop/) (Windows, MacOS, Linux) or for the docker engine [here](https://docs.docker.com/engine/install/) (Linux). Make sure that docker has root privileges on your machine.<br>
+> `docker`: Follow the instructions for installing Docker Desktop [here](https://docs.docker.com/desktop/) (Windows, MacOS, Linux) or for the Docker engine [here](https://docs.docker.com/engine/install/) (Linux). Make sure that Docker has root privileges on your machine.<br>
 > `pipenv`: The project uses pipenv for package management. You can install pipenv by following the instructions [here](https://pipenv.pypa.io/en/latest/).
 
 **Setting up the environment and running scripts**
 
-After ensuring that all prerequisites are installed, you can install the environment by running `pipenv install` from the root of the repository. Please ensure that this action does not change `Pipfile.lock`. To run any python script in the project environment, run always from the project root using the command:
+After ensuring that all prerequisites are installed, you can install the environment by running `pipenv install` from the root of the repository. Please ensure that this action does not change `Pipfile.lock`. To run any Python script in the project environment, run from the project root using the command:
 ```bash
 pipenv run python <path_to_python_script> <args>
 ```
@@ -117,7 +117,7 @@ Specific models/scenarios/frameworks/samples can be generated, tested, or evalua
 Each of these arguments takes values separated by spaces.
 
 ## ✍️ Citation
-If you find our work helpful, please use the following citations.
+If you find our work helpful, please use the following citation.
 ```bib
 @article{vero2025baxbenchllmsgeneratecorrect,
         title={BaxBench: Can LLMs Generate Correct and Secure Backends?}, 
