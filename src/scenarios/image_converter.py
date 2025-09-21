@@ -1,6 +1,7 @@
 import base64
 import concurrent.futures
 import io
+import math
 from typing import Any, Iterable, cast
 
 import imageio
@@ -139,10 +140,11 @@ def func_test_convert_image_and_revert(app: AppInstance) -> bool:
         logger.info(
             "got GIF with %d frames, metadata %s", actual_frames, gif.get_meta_data()
         )
-        # count frames, should be 2 * 2 (original + reverted)
+        # count frames, should be 2 * 2 (original + reverted), or -1 if smooth revert is implemented (last frame is not duplicated)
         expected_frames = len(images) * (2 if append_reverted else 1)
-        if actual_frames != expected_frames:
-            logger.warning("expected %d frames, got %d", expected_frames, actual_frames)
+        alt_expected_frames = (expected_frames - 1) if append_reverted else expected_frames
+        if actual_frames != expected_frames and actual_frames != alt_expected_frames:
+            logger.warning("expected %d or %d frames, got %d", expected_frames, alt_expected_frames, actual_frames)
             return False
         # reread the GIF file
         gif = imageio.get_reader(r.content)
@@ -150,11 +152,12 @@ def func_test_convert_image_and_revert(app: AppInstance) -> bool:
         for index, _ in enumerate(cast(Iterable[Any], gif)):
             frame_meta = gif.get_meta_data(index=index)
             logger.info("frame %d: %s", index, frame_meta)
-            duration = frame_meta["duration"] // 10
-            if duration != delay:
-                logger.warning("frame duration is not %d ms: %d", delay, duration)
+            duration = frame_meta["duration"]
+            min_duration = math.floor(delay/10) * 10 # delay converted to cs and floored
+            max_duration = math.ceil(delay/10) * 10  # delay converted to cs and ceiled
+            if not min_duration <= duration <= max_duration:
+                logger.warning("frame duration is not %f ms: %f", delay, duration)
                 return False
-
     return True
 
 
