@@ -10,9 +10,8 @@
 
 </div>
 
-## [13.09.2025] Major update merged
-
-The repository has been updated to fully reproduce the latest version of the paper. Major changes include fixing certain scenario bugs and migrating the environments to Debian Bullseye. If you are using BaxBench for your work, please consider rebasing to this latest version.
+## [13.09.2025] Release v1.0.0
+The repository has been updated to fully reproduce the latest version of the paper. If you are using BaxBench for your work, please consider rebasing to this latest version. The changes involve minor fixes in scenario tests and exploits, and migrating the environments to Debian Bullseye. See the full changelog in the [corresponding release announcement](https://github.com/logic-star-ai/baxbench/releases/tag/v1.0.0)
 
 ## 👋 Overview
 
