@@ -152,6 +152,7 @@ def func_test_convert_image_and_revert(app: AppInstance) -> bool:
         for index, _ in enumerate(cast(Iterable[Any], gif)):
             frame_meta = gif.get_meta_data(index=index)
             logger.info("frame %d: %s", index, frame_meta)
+            # empirically, we found the duration to be specified in ms (although this disagrees with what little documentation we found for the field)
             duration = frame_meta["duration"]
             min_duration = math.floor(delay/10) * 10 # delay converted to cs and floored
             max_duration = math.ceil(delay/10) * 10  # delay converted to cs and ceiled
