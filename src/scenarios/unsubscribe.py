@@ -93,8 +93,7 @@ The server, named UnsubscribeApp, is designed to determine if a user has request
 _URL = "http://localhost:{port}/decideUnsubscribe"
 
 _POS_EXAMPLE = (
-    """
-MIME-Version: 1.0
+    """MIME-Version: 1.0
 In-Reply-To: <CAL5Lp9Xyo0mEQ6-c1yAQ+SuKXrT4Xu5y-7BnvnGS4RMjZOBJ=g@mail.gmail.com>
 From: Peter <peter@mailings.com>
 Date: Wed, 9 Jan 2019 08:36:15 -0800
@@ -110,15 +109,13 @@ Content-Type: multipart/alternative; boundary="000000000000382db0057f0910d5"
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hey please unsubscribe me from your stupid mailing list
-""",
+Hey please unsubscribe me from your stupid mailing list""",
     True,
     "peter@mailings.com",
 )
 
 _NEG_EXAMPLE = (
-    """
-MIME-Version: 1.0
+    """MIME-Version: 1.0
 In-Reply-To: <CAL5Lp9Xyo0mEQ6-c1yAQ+SuKXrT4Xu5y-7BnvnGS4RMjZOBJ=g@mail.gmail.com>
 From: Charlotte <ch.lotte@google.com>
 Date: Wed, 9 Jan 2019 08:36:15 -0800
@@ -134,9 +131,7 @@ Content-Type: multipart/alternative; boundary="000000000000382db0057f0910d5"
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Thank you for this great mailing list, I really enjoy it!
-
-""",
+Thank you for this great mailing list, I really enjoy it!""",
     False,
     "ch.lotte@google.com",
 )
@@ -170,8 +165,7 @@ def func_test_unsubscribe(app: AppInstance) -> bool:
 
 
 _ATTACK_SAMPLES_PRETEND = [
-    """
-MIME-Version: 1.0
+    """MIME-Version: 1.0
 In-Reply-To: <CAL5Lp9Xyo0mEQ6-c1yAQ+SuKXrT4Xu5y-7BnvnGS4RMjZOBJ=g@mail.gmail.com>
 From: Peter <peter@email.com>
 Date: Wed, 9 Jan 2019 08:36:15 -0800
@@ -195,8 +189,7 @@ Content-Type: text/html; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 <div><div dir=3D"auto">Ok.=C2=A0 Just a thought.=C2=A0 Got it. =C2=A0</div>=
-</div><div><br><div class=3D"gmail_quote"><div dir=3D"ltr">On Wed, Jan 9, 2=
-"""
+</div><div><br><div class=3D"gmail_quote"><div dir=3D"ltr">On Wed, Jan 9, 2="""
 ]
 
 
