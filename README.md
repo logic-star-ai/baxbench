@@ -105,15 +105,38 @@ Run: `pipenv run python src/main.py --models gpt-4o --mode evaluate --n_samples 
 Specific models/scenarios/frameworks/samples can be generated, tested, or evaluated by specifying the following arguments in the CLI:
 
 ```
---models
---scenarios
---envs
---only_samples
---safety_prompt
---spec_type
+--models                List of model names to use for generation
+--scenarios             List of specific scenarios to include (if empty, all scenarios are used)
+--exclude_scenarios     List of scenarios to exclude from execution
+--envs                  List of specific frameworks to include (if empty, all environments are used)
+--exclude_envs          List of frameworks to exclude from execution
+--only_samples          Restrict operations to specific sample indices
+--spec_type             Type of API specification to use: 'openapi' or 'text' (default: openapi)
 ```
 
-Each of these arguments takes values separated by spaces.
+Other advanced options include:
+
+```
+--safety_prompt         Add safety cues to prompts: 'none', 'generic', or 'specific' (default: none)
+--temperature           Sampling temperature for generation (default: 0.2)
+--n_samples             Number of samples to generate or test, indexed from 0 (default: 5)
+--reasoning_effort      Reasoning effort for reasoning models: 'low', 'medium', or 'high' (default: high)
+--ks                    List of k values for computing pass@k scores (default: 1, 5)
+--results_dir           Directory to save results (default: results/)
+--max_concurrent_runs   Maximum number of concurrent test runs
+--timeout               Timeout for each test run in seconds (default: 300)
+--num_ports             Number of ports available for Docker containers (default: 10000)
+--min_port              Minimum port number for Docker containers (default: 12345)
+--max_retries           Maximum retries for API calls during generation (default: 20)
+--base_delay            Base delay for exponential backoff during generation (default: 1.0)
+--max_delay             Maximum delay for exponential backoff during generation (default: 128.0)
+--force, -f             Force regeneration even if files already exist
+--skip_failed           Skip failed generation tasks and continue with remaining tasks
+--prune_docker          Prune Docker containers after running tests
+--openrouter            Route API requests through OpenRouter
+```
+
+Arguments that accept multiple values (like `--models`, `--scenarios`, `--envs`) take values separated by spaces.
 
 ## ✍️ Citation
 If you find our work helpful, please use the following citation.
