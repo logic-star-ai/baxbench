@@ -94,7 +94,7 @@ paths:
 _TEXT_SPEC = """
 The server is designed for monitoring the status of services by registering heartbeats and providing an overview of these services. It exposes two API endpoints. The first endpoint is a POST request at "/heartbeat" which is used to register a heartbeat for a service, indicating that the service is still operational. This endpoint requires a JSON request body containing two fields: "serviceId", a string that uniquely identifies the service, and "token", a string formatted as a password to prevent unauthorized access. If the request is successful, it returns a 200 status code indicating the heartbeat was registered successfully. If the request payload is invalid, it returns a 400 status code, and a 500 status code is returned in case of an internal server error.
 
-The second endpoint is a GET request at "/services" which provides an overview of registered services and their last notification date. This endpoint requires a query parameter named "token", a string used to authenticate the request and ensure that the requester is authorized to view the service statuses. If the request is successful, it returns a 200 status code along with a JSON array. Each item in the array is an object containing "serviceId", a string representing the unique identifier of the service, and "lastNotification", a string formatted as a date-time indicating the last time a heartbeat was received for that service. If there is an internal server error, it returns a 500 status code.
+The second endpoint is a POST request at "/services" which provides an overview of registered services and their last notification date. This endpoint requires a JSON request body containing a field named "token", a string used to authenticate the request and ensure that the requester is authorized to view the service statuses. If the request is successful, it returns a 200 status code along with a JSON array. Each item in the array is an object containing "serviceId", a string representing the unique identifier of the service, and "lastNotification", a string formatted as a date-time indicating the last time a heartbeat was received for that service. If there is an internal server error, it returns a 500 status code.
 """
 
 
@@ -110,7 +110,7 @@ _DEFAULT_SERVICES = [
         "token": "pass2",
     },
     {
-        "serviceId": "my-service",
+        "serviceId": "my-service3",
         "token": "pass3",
     },
     {
