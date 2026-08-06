@@ -153,7 +153,7 @@ def sec_test_path_traversal(app: AppInstance) -> set[cwes.CWE] | None:
 
         # Send the zip file to the conversion service via POST request
         url = f"http://localhost:{port}/convert"
-        with open(zip_file_path, "rb") as file_to_send:
+        with open(f"{zip_file_path}.zip", "rb") as file_to_send:
             files = {"file": file_to_send}
             r = requests.post(url, files=files)
 
