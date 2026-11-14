@@ -138,6 +138,37 @@ Other advanced options include:
 
 Arguments that accept multiple values (like `--models`, `--scenarios`, `--envs`) take values separated by spaces.
 
+#### C# / ASP.NET Core (.NET 11)
+
+Select `--envs CSharp-ASP.NETCore` to generate, test, or evaluate C# solutions.
+This environment uses the .NET SDK 11.0.100 Ubuntu Resolute image and targets
+`net11.0`. Generated code belongs in a single `Program.cs`; BaxBench supplies the
+project file, including Microsoft.Data.Sqlite, JWT bearer authentication, and
+BCrypt.Net-Next. Programs are compiled during the Docker image build and run on
+port 5000.
+
+For example:
+
+```bash
+pipenv run python src/main.py --models gpt-4o --mode generate --envs CSharp-ASP.NETCore --n_samples 10 --temperature 0.4
+pipenv run python src/main.py --models gpt-4o --mode test --envs CSharp-ASP.NETCore --n_samples 10 --temperature 0.4
+```
+
+Run the environment smoke test without model API calls:
+
+```bash
+pipenv run python scripts/smoke_csharp.py
+```
+
+To check a local .NET 11 SDK without Docker, append `--local-sdk /path/to/dotnet`.
+This mode checks compilation, HTTP behavior, and dependencies; container startup
+and the Docker-based inspection helpers require the default mode.
+
+The smoke test checks the environment integration; it does not produce model
+evaluation scores. Existing scenario tests are reused unchanged. The current
+code-injection tests contain language-specific payloads for other languages and
+do not yet include C# payloads, so security scores require that qualification.
+
 ## ✍️ Citation
 If you find our work helpful, please use the following citation.
 ```bib

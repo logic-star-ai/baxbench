@@ -1,4 +1,5 @@
 from env.base import Env
+from env.csharp import CSharpAspNetCoreEnv
 from env.go import FiberEnv, GinEnv, NetHttpEnv
 from env.javascript import ExpressEnv, FastifyEnv, KoaEnv, NestJsEnv
 from env.php import PhpLaravelLumenEnv
@@ -8,6 +9,7 @@ from env.rust import RustActixEnv
 
 all_envs: list[Env] = [
     AioHttpEnv,
+    CSharpAspNetCoreEnv,
     DjangoEnv,
     ExpressEnv,
     FastAPIEnv,
